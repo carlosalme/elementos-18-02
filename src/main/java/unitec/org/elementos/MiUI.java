@@ -10,6 +10,7 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.SelectionMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextField;
@@ -32,8 +33,10 @@ public class MiUI extends UI{
 
     @Override
     protected void init(VaadinRequest request) {
-     //agregaremos un leyout vertical y dentro de el las componentes 
-     //que quedaran en orden descendente 
+        
+        t1=new TextField();
+        t2=new TextField();
+     
      VerticalLayout layout=new VerticalLayout();
      Label e1=new Label("Carlos Eduardo");
      e1.addStyleName(ValoTheme.LABEL_H1);
@@ -45,7 +48,13 @@ public class MiUI extends UI{
      b1.addClickListener(algo->{
         //aqui vamos a poner el evento
         //e1.setValue("Mi primer programacion funcional");
-        Notification.show("Error", Notification.Type.ERROR_MESSAGE);
+        //Notification.show("Error", Notification.Type.ERROR_MESSAGE);
+        t1.setValue("");
+        t2.setValue("");
+        VentanaGuardar sub = new VentanaGuardar();
+    
+        UI.getCurrent().addWindow(sub);
+        
      });
      
      //agregamos las componentes al layout
@@ -66,11 +75,16 @@ grid.addColumn(Mensajitos::getId).setCaption("ID");
 grid.addColumn(Mensajitos::getTitulo).setCaption("Titulo");
 grid.addColumn(Mensajitos::getCuerpo).setCaption("Cuerpo del mensaje");
 
-grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+//agregar al grid el modo de seleccion unico
+grid.setSelectionMode(SelectionMode.SINGLE);
 
 grid.addItemClickListener(evento -> {
-    Notification.show("Valor: "+ evento.getItem().getTitulo());
+    //Notification.show("Valor: "+ evento.getItem().getTitulo());
+    id=evento.getItem().getId();
+    t1.setValue(evento.getItem().getTitulo());
+    t2.setValue(evento.getItem().getCuerpo());
     Ventana sub = new Ventana();
+    
     UI.getCurrent().addWindow(sub);
     
 });
@@ -78,7 +92,7 @@ grid.addItemClickListener(evento -> {
 layout.addComponent(grid);
     }
     
-}
+
 
 class Ventana extends Window {
     public Ventana(){
@@ -91,14 +105,47 @@ class Ventana extends Window {
         
         
         Button boton =new Button ("actualizar");
-        boton.addClickListener(evento -> {
-        close();
+        Button botonborrar = new Button ("borrar");
+        
+        botonborrar.addAttachListener(eventoborrar-> {
+           repoMensa.delete(id);
         });
+                
+        boton.addClickListener(evento -> {
+            repoMensa.save(new Mensajitos(id,t1.getValue(),t2.getValue()));
+            close();
+        });
+        v12.addComponent(t1);
+        v12.addComponent(t2);
+        v12.addComponent(boton);
+        v12.addComponent(botonborrar);
+        
+        setContent(v12);
+    }
+    
+    class VentanaGuardar extends Window {
+    public VentanaGuardar(){
+        super("guardar");
+        center();
+        VerticalLayout v12 =new VerticalLayout();
+        
+        //TextField t1=new TextField();
+        //TextField t2=new TextField();
+        
+        
+        Button boton =new Button ("guardar");
+        boton.addClickListener(evento -> {
+            repoMensa.save(new Mensajitos(id,t1.getValue(),t2.getValue()));
+            close();
+        });
+        
         v12.addComponent(t1);
         v12.addComponent(t2);
         v12.addComponent(boton);
         
         setContent(v12);
-    }
+    
     }
 
+    }
+}
